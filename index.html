@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Draggable Tiled Image Overlay with Export</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+        #background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        #overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: move;
+            opacity: 0.65;
+        }
+        #exportButton {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #exportButton:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <img id="background" src="/eg.png" alt="Background Image">
+    <canvas id="overlay"></canvas>
+    <button id="exportButton">Export as PNG</button>
+
+    <script>
+        const background = document.getElementById('background');
+        const overlay = document.getElementById('overlay');
+        const exportButton = document.getElementById('exportButton');
+        let isDragging = false;
+        let startX, startY;
+        let scale = 1;
+
+        // Create the tiled overlay image
+        const createTiledImage = () => {
+            const img = new Image();
+            img.src = '/tile.png';
+            img.onload = () => {
+                const naturalWidth = background.naturalWidth;
+                const naturalHeight = background.naturalHeight;
+                const containerWidth = window.innerWidth;
+                const containerHeight = window.innerHeight;
+
+                scale = Math.min(containerWidth / naturalWidth, containerHeight / naturalHeight);
+
+                overlay.width = naturalWidth * scale;
+                overlay.height = naturalHeight * scale;
+
+                const ctx = overlay.getContext('2d');
+                const pattern = ctx.createPattern(img, 'repeat');
+                ctx.fillStyle = pattern;
+                
+                ctx.save();
+                ctx.scale(scale, scale);
+                ctx.fillRect(0, 0, naturalWidth, naturalHeight);
+                ctx.restore();
+            };
+        };
+
+        // Initialize dragging
+        overlay.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - overlay.offsetLeft;
+            startY = e.clientY - overlay.offsetTop;
+        });
+
+        // Handle dragging
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            const x = e.clientX - startX;
+            const y = e.clientY - startY;
+            overlay.style.left = `${x}px`;
+            overlay.style.top = `${y}px`;
+        });
+
+        // End dragging
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+
+        // Adjust overlay size on window resize
+        window.addEventListener('resize', createTiledImage);
+
+        // Export function
+        exportButton.addEventListener('click', () => {
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = background.naturalWidth;
+            exportCanvas.height = background.naturalHeight;
+            const ctx = exportCanvas.getContext('2d');
+
+            // Draw background
+            ctx.drawImage(background, 0, 0, background.naturalWidth, background.naturalHeight);
+
+            // Draw overlay
+            const overlayX = parseInt(overlay.style.left || '0') / scale;
+            const overlayY = parseInt(overlay.style.top || '0') / scale;
+            ctx.globalAlpha = 0.65;
+            ctx.drawImage(overlay, overlayX, overlayY, background.naturalWidth, background.naturalHeight);
+
+            // Create download link
+            const dataURL = exportCanvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.href = dataURL;
+            link.download = 'exported_image.png';
+            link.click();
+        });
+
+        // Initialize the page
+        background.onload = createTiledImage;
+    </script>
+</body>
+</html>
