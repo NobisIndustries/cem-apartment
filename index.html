@@ -44,7 +44,7 @@
     </style>
 </head>
 <body>
-    <img id="background" src="/eg.png" alt="Background Image">
+    <img id="background" src="https://nobisindustries.github.io/cem-apartment/eg.png" alt="Background Image">
     <canvas id="overlay"></canvas>
     <button id="exportButton">Export as PNG</button>
 
@@ -59,7 +59,7 @@
         // Create the tiled overlay image
         const createTiledImage = () => {
             const img = new Image();
-            img.src = '/tile.png';
+            img.src = 'https://nobisindustries.github.io/cem-apartment/tile.png';
             img.onload = () => {
                 const naturalWidth = background.naturalWidth;
                 const naturalHeight = background.naturalHeight;
